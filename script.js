@@ -41,6 +41,7 @@ const borsboom_list = [
 ];
 
 let coins = 0;
+let inventory = {};
 let luckBoost = 0;
 let autoInterval = null;
 let luckPrice = 50;
@@ -57,20 +58,59 @@ function rand(arr){
 function getRarity(){
 
     const roll = Math.random();
-
     const luckFactor = 1 - luckBoost;
 
-    if(roll < 0.40 * luckFactor) return {name:"Common", class:"common", value:1};
-    if(roll < 0.65 * luckFactor) return {name:"Uncommon", class:"uncommon", value:3};
-    if(roll < 0.80 * luckFactor) return {name:"Rare", class:"rare", value:6};
-    if(roll < 0.90 * luckFactor) return {name:"Epic", class:"epic", value:15};
-    if(roll < 0.96 * luckFactor) return {name:"Legendary", class:"legendary", value:40};
-    if(roll < 0.985 * luckFactor) return {name:"Mythic", class:"mythic", value:75};
-    if(roll < 0.993 * luckFactor) return {name:"Divine", class:"divine", value:120};
-    if(roll < 0.997 * luckFactor) return {name:"Celestial", class:"celestial", value:250};
-    if(roll < 0.999 * luckFactor) return {name:"Transcendent", class:"transcendent", value:500};
+    if(roll < 0.35 * luckFactor) return makeRarity("Common","common",1);
+    if(roll < 0.60 * luckFactor) return makeRarity("Uncommon","uncommon",3);
+    if(roll < 0.75 * luckFactor) return makeRarity("Rare","rare",8);
+    if(roll < 0.85 * luckFactor) return makeRarity("Epic","epic",20);
+    if(roll < 0.92 * luckFactor) return makeRarity("Legendary","legendary",50);
+    if(roll < 0.965 * luckFactor) return makeRarity("Mythic","mythic",100);
+    if(roll < 0.985 * luckFactor) return makeRarity("Divine","divine",200);
+    if(roll < 0.993 * luckFactor) return makeRarity("Celestial","celestial",400);
+    if(roll < 0.997 * luckFactor) return makeRarity("Transcendent","transcendent",800);
+    if(roll < 0.999 * luckFactor) return makeRarity("Ethereal","ethereal",1500);
+    if(roll < 0.9994 * luckFactor) return makeRarity("Abyssal","abyssal",3000);
+    if(roll < 0.9997 * luckFactor) return makeRarity("Chrono","chrono",6000);
+    if(roll < 0.99985 * luckFactor) return makeRarity("Voidborn","voidborn",12000);
+    if(roll < 0.99995 * luckFactor) return makeRarity("Omniversal","omniversal",25000);
 
-    return {name:"TUFF GOD", class:"tuffgod", value:2000};
+    return makeRarity("TUFF GOD","tuffgod",100000);
+}
+
+function makeRarity(name, css, value){
+    return {name:name, class:css, value:value};
+}
+
+function triggerOverlay(rarity){
+
+    const overlay = document.getElementById("rarityOverlay");
+
+    overlay.className = "";
+    overlay.style.opacity = 1;
+
+    if(rarity.class === "omniversal"){
+        overlay.classList.add("overlay-active","omniversal-overlay");
+    }
+
+    if(rarity.class === "tuffgod"){
+        overlay.classList.add("overlay-active","tuffgod-overlay");
+    }
+
+    setTimeout(()=>{
+        overlay.className = "";
+        overlay.style.opacity = 0;
+    },1000);
+}
+
+function updateInventory(){
+
+    const invDiv = document.getElementById("inventory");
+    invDiv.innerHTML = "<h3>Inventory</h3>";
+
+    for(const key in inventory){
+        invDiv.innerHTML += key + ": " + inventory[key] + "<br>";
+    }
 }
 
 function generate(){
@@ -93,9 +133,17 @@ function generate(){
 
         const rarity = getRarity();
 
+        triggerOverlay(rarity);
+
         resultDiv.innerText = name;
         rarityDiv.innerText = rarity.name;
         rarityDiv.className = rarity.class;
+
+        if(!inventory[rarity.name]){
+            inventory[rarity.name] = 0;
+        }
+        inventory[rarity.name]++;
+        updateInventory();
 
         coins += rarity.value;
         updateCoins();
