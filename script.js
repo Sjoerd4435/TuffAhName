@@ -102,6 +102,7 @@ function makeRarity(name, css, value){
 function triggerOverlay(rarity){
 
     const overlay = document.getElementById("rarityOverlay");
+    const body = document.body;
 
     if(!overlay) return;
 
