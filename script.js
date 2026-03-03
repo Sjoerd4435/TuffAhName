@@ -41,15 +41,15 @@ const borsboom_list = corne_list = ["Corne","Cornel","Corney","Corino","Corwin",
 ];
 
 function rand(arr){
-    return arr[Math.floor(Math.random()*arr.length)];
+    return arr[Math.floor(Math.random() * arr.length)];
 }
 
 function generate(){
-    let result =
+    let text =
         rand(finn_list) + " " +
         rand(henrico_list) + " " +
         rand(corne_list) + " " +
         rand(borsboom_list);
 
-    document.getElementById("result").innerText = result;
+    document.getElementById("result").textContent = text;
 }
