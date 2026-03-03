@@ -40,6 +40,9 @@ const borsboom_list = [
 "Borsneo","Borsnova","Borsprime","Borsbase","Borsweb","Borsnetto","Borslab","Borssys","Borslogic","Borscore"
 ];
 
+let coins = 0;
+let luckBoost = 0;
+let autoInterval = null;
 let luckPrice = 50;
 let autoPrice = 100;
 let luckLevel = 0;
