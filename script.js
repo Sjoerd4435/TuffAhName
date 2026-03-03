@@ -103,8 +103,9 @@ function triggerOverlay(rarity){
 
     const overlay = document.getElementById("rarityOverlay");
 
+    if(!overlay) return;
+
     overlay.className = "";
-    overlay.style.opacity = 1;
 
     if(rarity.class === "omniversal"){
         overlay.classList.add("overlay-active","omniversal-overlay");
@@ -113,11 +114,21 @@ function triggerOverlay(rarity){
     if(rarity.class === "tuffgod"){
         overlay.classList.add("overlay-active","tuffgod-overlay");
     }
+    if(rarity.class === "mythic" || rarity.class === "divine"){
+    body.style.animation = "cosmicWarp 1s ease";
+    }
+    
+    if(rarity.class === "abyssal" || rarity.class === "chrono"){
+        body.style.animation = "voidCollapse 1s ease";
+    }
+    
+    if(rarity.class === "celestial" ){
+        body.style.animation = "beam 1s ease";
+    }
 
     setTimeout(()=>{
         overlay.className = "";
-        overlay.style.opacity = 0;
-    },1000);
+    },900);
 }
 
 function updateInventory(){
