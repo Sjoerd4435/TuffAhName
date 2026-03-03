@@ -1,10 +1,86 @@
 body{
     font-family: Arial;
+    background: #111;
+    color: white;
     text-align: center;
-    margin-top: 50px;
+}
+
+.generator{
+    margin-top: 40px;
+}
+
+#result{
+    font-size: 28px;
+    margin: 20px;
+    transition: 0.3s;
+}
+
+#rarity{
+    font-size: 22px;
+    margin-bottom: 15px;
 }
 
 button{
-    font-size: 20px;
-    padding: 10px;
+    padding: 10px 20px;
+    margin: 5px;
+    cursor: pointer;
+}
+
+.shop{
+    margin-top: 50px;
+    padding: 20px;
+    border-top: 2px solid white;
+}
+
+/* Glow effects */
+.common { color: #aaa; }
+.uncommon { color: #4da6ff; }
+.rare { color: #b84dff; text-shadow: 0 0 10px #b84dff; }
+.epic { color: orange; text-shadow: 0 0 15px orange; }
+.legendary { 
+    color: red; 
+    text-shadow: 0 0 20px red, 0 0 40px red; 
+    animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse{
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
+}
+.mythic {
+    color: #ff00ff;
+    text-shadow: 0 0 15px #ff00ff;
+}
+
+.divine {
+    color: gold;
+    text-shadow: 0 0 20px gold, 0 0 40px gold;
+}
+
+.celestial {
+    color: cyan;
+    text-shadow: 0 0 20px cyan, 0 0 50px cyan;
+    animation: pulse 0.8s infinite alternate;
+}
+
+.transcendent {
+    background: linear-gradient(90deg, red, orange, yellow, green, blue, purple);
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: rainbow 2s linear infinite;
+}
+
+.tuffgod {
+    color: white;
+    text-shadow:
+        0 0 10px white,
+        0 0 20px red,
+        0 0 30px orange,
+        0 0 40px purple;
+    animation: pulse 0.5s infinite alternate;
+}
+
+@keyframes rainbow {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
 }
