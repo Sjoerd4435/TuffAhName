@@ -52,11 +52,16 @@ function rand(arr){
 function getRarity(){
     const roll = Math.random() - luckBoost;
 
-    if(roll < 0.5) return {name:"Common", class:"common", value:1};
-    if(roll < 0.75) return {name:"Uncommon", class:"uncommon", value:3};
-    if(roll < 0.9) return {name:"Rare", class:"rare", value:7};
-    if(roll < 0.98) return {name:"Epic", class:"epic", value:20};
-    return {name:"Legendary", class:"legendary", value:100};
+    if(roll < 0.40) return {name:"Common", class:"common", value:1};
+    if(roll < 0.65) return {name:"Uncommon", class:"uncommon", value:3};
+    if(roll < 0.80) return {name:"Rare", class:"rare", value:6};
+    if(roll < 0.90) return {name:"Epic", class:"epic", value:15};
+    if(roll < 0.96) return {name:"Legendary", class:"legendary", value:40};
+    if(roll < 0.985) return {name:"Mythic", class:"mythic", value:75};
+    if(roll < 0.993) return {name:"Divine", class:"divine", value:120};
+    if(roll < 0.997) return {name:"Celestial", class:"celestial", value:250};
+    if(roll < 0.999) return {name:"Transcendent", class:"transcendent", value:500};
+    return {name:"TUFF GOD", class:"tuffgod", value:2000};
 }
 
 function generate(){
