@@ -77,10 +77,12 @@ function getRarity(){
 
     // Apply luck scaling ONLY to rare tiers
     rarities.forEach(r => {
-    if(r.weight < 100){
-        r.weight *= (1 + Math.max(0,luckBoost * 4));
-        }
-    });
+    let boostMultiplier = 1 + (luckBoost * 8);
+
+    if(r.weight < 1000){
+        r.weight = r.weight * boostMultiplier;
+    }
+});
 
     let totalWeight = rarities.reduce((sum, r) => sum + r.weight, 0);
     let roll = Math.random() * totalWeight;
