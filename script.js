@@ -40,16 +40,91 @@ const borsboom_list = [
 "Borsneo","Borsnova","Borsprime","Borsbase","Borsweb","Borsnetto","Borslab","Borssys","Borslogic","Borscore"
 ];
 
+let coins = 0;
+let luckBoost = 0;
+let auto = false;
+let devMode = false;
+
 function rand(arr){
     return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function generate(){
-    let text =
-        rand(finn_list) + " " +
-        rand(henrico_list) + " " +
-        rand(corne_list) + " " +
-        rand(borsboom_list);
+function getRarity(){
+    const roll = Math.random() - luckBoost;
 
-    document.getElementById("result").textContent = text;
+    if(roll < 0.5) return {name:"Common", class:"common", value:1};
+    if(roll < 0.75) return {name:"Uncommon", class:"uncommon", value:3};
+    if(roll < 0.9) return {name:"Rare", class:"rare", value:7};
+    if(roll < 0.98) return {name:"Epic", class:"epic", value:20};
+    return {name:"Legendary", class:"legendary", value:100};
+}
+
+function generate(){
+
+    const resultDiv = document.getElementById("result");
+    const rarityDiv = document.getElementById("rarity");
+
+    // Roll animation
+    resultDiv.innerText = "Rolling...";
+    rarityDiv.innerText = "";
+    resultDiv.className = "";
+
+    setTimeout(() => {
+
+        const name =
+            rand(finn_list) + " " +
+            rand(henrico_list) + " " +
+            rand(corne_list) + " " +
+            rand(borsboom_list);
+
+        const rarity = getRarity();
+
+        resultDiv.innerText = name;
+        rarityDiv.innerText = rarity.name;
+        rarityDiv.className = rarity.class;
+
+        coins += rarity.value;
+        updateCoins();
+
+    }, 500);
+}
+
+function updateCoins(){
+    document.getElementById("coins").innerText = coins;
+}
+
+/* -------- SHOP -------- */
+
+function buyLuck(){
+    if(coins >= 50){
+        coins -= 50;
+        luckBoost += 0.02;
+        updateCoins();
+    }
+}
+
+function buyAuto(){
+    if(coins >= 200 && !auto){
+        coins -= 200;
+        auto = true;
+        updateCoins();
+
+        setInterval(() => {
+            generate();
+        }, 2000);
+    }
+}
+
+/* -------- DEV MODE -------- */
+
+function redeemCode(){
+    const code = document.getElementById("codeBox").value;
+
+    if(code.toLowerCase() === "tuff"){
+        devMode = true;
+        coins += 10000;
+        luckBoost += 0.3;
+        updateCoins();
+        alert("DEV MODE ACTIVATED 😈");
+    }
 }
