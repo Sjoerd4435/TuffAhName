@@ -57,25 +57,40 @@ function rand(arr){
 
 function getRarity(){
 
-    const roll = Math.random();
-    const luckFactor = 1 - luckBoost;
+    const rarities = [
+        {name:"Common", class:"common", value:1, weight:5000},
+        {name:"Uncommon", class:"uncommon", value:3, weight:2500},
+        {name:"Rare", class:"rare", value:8, weight:1200},
+        {name:"Epic", class:"epic", value:20, weight:600},
+        {name:"Legendary", class:"legendary", value:50, weight:250},
+        {name:"Mythic", class:"mythic", value:100, weight:120},
+        {name:"Divine", class:"divine", value:200, weight:50},
+        {name:"Celestial", class:"celestial", value:400, weight:20},
+        {name:"Transcendent", class:"transcendent", value:800, weight:8},
+        {name:"Ethereal", class:"ethereal", value:1500, weight:3},
+        {name:"Abyssal", class:"abyssal", value:3000, weight:1},
+        {name:"Chrono", class:"chrono", value:6000, weight:0.5},
+        {name:"Voidborn", class:"voidborn", value:12000, weight:0.2},
+        {name:"Omniversal", class:"omniversal", value:25000, weight:0.05},
+        {name:"TUFF GOD", class:"tuffgod", value:100000, weight:0.01}
+    ];
 
-    if(roll < 0.35 * luckFactor) return makeRarity("Common","common",1);
-    if(roll < 0.60 * luckFactor) return makeRarity("Uncommon","uncommon",3);
-    if(roll < 0.75 * luckFactor) return makeRarity("Rare","rare",8);
-    if(roll < 0.85 * luckFactor) return makeRarity("Epic","epic",20);
-    if(roll < 0.92 * luckFactor) return makeRarity("Legendary","legendary",50);
-    if(roll < 0.965 * luckFactor) return makeRarity("Mythic","mythic",100);
-    if(roll < 0.985 * luckFactor) return makeRarity("Divine","divine",200);
-    if(roll < 0.993 * luckFactor) return makeRarity("Celestial","celestial",400);
-    if(roll < 0.997 * luckFactor) return makeRarity("Transcendent","transcendent",800);
-    if(roll < 0.999 * luckFactor) return makeRarity("Ethereal","ethereal",1500);
-    if(roll < 0.9994 * luckFactor) return makeRarity("Abyssal","abyssal",3000);
-    if(roll < 0.9997 * luckFactor) return makeRarity("Chrono","chrono",6000);
-    if(roll < 0.99985 * luckFactor) return makeRarity("Voidborn","voidborn",12000);
-    if(roll < 0.99995 * luckFactor) return makeRarity("Omniversal","omniversal",25000);
+    // Apply luck scaling ONLY to rare tiers
+    rarities.forEach(r => {
+        if(r.weight < 100){
+            r.weight *= (1 + luckBoost * 5);
+        }
+    });
 
-    return makeRarity("TUFF GOD","tuffgod",100000);
+    let totalWeight = rarities.reduce((sum, r) => sum + r.weight, 0);
+    let roll = Math.random() * totalWeight;
+
+    for(let r of rarities){
+        if(roll < r.weight){
+            return r;
+        }
+        roll -= r.weight;
+    }
 }
 
 function makeRarity(name, css, value){
