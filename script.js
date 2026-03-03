@@ -40,8 +40,10 @@ const borsboom_list = [
 "Borsneo","Borsnova","Borsprime","Borsbase","Borsweb","Borsnetto","Borslab","Borssys","Borslogic","Borscore"
 ];
 
-let coins = 0;
-let luckBoost = 0;
+let luckPrice = 50;
+let autoPrice = 100;
+let luckLevel = 0;
+let autoLevel = 0;
 let auto = false;
 let devMode = false;
 
@@ -98,25 +100,38 @@ function updateCoins(){
     document.getElementById("coins").innerText = coins;
 }
 
-/* -------- SHOP -------- */
-
-function buyLuck(){
-    if(coins >= 50){
-        coins -= 50;
-        luckBoost += 0.02;
-        updateCoins();
-    }
+function updateLuckDisplay(){
+    document.getElementById("luckDisplay").innerText =
+        "Luck: " + (luckBoost * 100).toFixed(1) + "%";
 }
 
-function buyAuto(){
-    if(coins >= 200 && !auto){
-        coins -= 200;
-        auto = true;
-        updateCoins();
+/* -------- SHOP -------- */
 
-        setInterval(() => {
-            generate();
-        }, 2000);
+function upgradeLuck(){
+    if(coins >= luckPrice){
+        coins -= luckPrice;
+        luckLevel++;
+        luckBoost += 0.01;
+
+        luckPrice = Math.floor(luckPrice * 1.6);
+
+        updateCoins();
+        updateLuckDisplay();
+        document.getElementById("luckPrice").innerText = luckPrice;
+    }
+}
+function upgradeAuto(){
+    if(coins >= autoPrice){
+        coins -= autoPrice;
+        autoLevel++;
+
+        clearInterval(autoInterval);
+        autoInterval = setInterval(generate, 3000 - (autoLevel * 200));
+
+        autoPrice = Math.floor(autoPrice * 1.8);
+
+        updateCoins();
+        document.getElementById("autoPrice").innerText = autoPrice;
     }
 }
 
@@ -130,6 +145,7 @@ function redeemCode(){
         coins += 10000;
         luckBoost += 0.3;
         updateCoins();
+        updateLuckDisplay();
         alert("DEV MODE ACTIVATED 😈");
     }
 }
