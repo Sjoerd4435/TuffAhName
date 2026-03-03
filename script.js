@@ -55,17 +55,21 @@ function rand(arr){
 }
 
 function getRarity(){
-    const roll = Math.random() - luckBoost;
 
-    if(roll < 0.40) return {name:"Common", class:"common", value:1};
-    if(roll < 0.65) return {name:"Uncommon", class:"uncommon", value:3};
-    if(roll < 0.80) return {name:"Rare", class:"rare", value:6};
-    if(roll < 0.90) return {name:"Epic", class:"epic", value:15};
-    if(roll < 0.96) return {name:"Legendary", class:"legendary", value:40};
-    if(roll < 0.985) return {name:"Mythic", class:"mythic", value:75};
-    if(roll < 0.993) return {name:"Divine", class:"divine", value:120};
-    if(roll < 0.997) return {name:"Celestial", class:"celestial", value:250};
-    if(roll < 0.999) return {name:"Transcendent", class:"transcendent", value:500};
+    const roll = Math.random();
+
+    const luckFactor = 1 - luckBoost;
+
+    if(roll < 0.40 * luckFactor) return {name:"Common", class:"common", value:1};
+    if(roll < 0.65 * luckFactor) return {name:"Uncommon", class:"uncommon", value:3};
+    if(roll < 0.80 * luckFactor) return {name:"Rare", class:"rare", value:6};
+    if(roll < 0.90 * luckFactor) return {name:"Epic", class:"epic", value:15};
+    if(roll < 0.96 * luckFactor) return {name:"Legendary", class:"legendary", value:40};
+    if(roll < 0.985 * luckFactor) return {name:"Mythic", class:"mythic", value:75};
+    if(roll < 0.993 * luckFactor) return {name:"Divine", class:"divine", value:120};
+    if(roll < 0.997 * luckFactor) return {name:"Celestial", class:"celestial", value:250};
+    if(roll < 0.999 * luckFactor) return {name:"Transcendent", class:"transcendent", value:500};
+
     return {name:"TUFF GOD", class:"tuffgod", value:2000};
 }
 
