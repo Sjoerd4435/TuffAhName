@@ -77,8 +77,8 @@ function getRarity(){
 
     // Apply luck scaling ONLY to rare tiers
     rarities.forEach(r => {
-        if(r.weight < 100){
-            r.weight *= (1 + luckBoost * 5);
+    if(r.weight < 100){
+        r.weight *= (1 + Math.max(0,luckBoost * 4));
         }
     });
 
@@ -121,6 +121,9 @@ function triggerOverlay(rarity){
 function updateInventory(){
 
     const invDiv = document.getElementById("inventory");
+
+    if(!invDiv) return;
+
     invDiv.innerHTML = "<h3>Inventory</h3>";
 
     for(const key in inventory){
@@ -196,7 +199,9 @@ function upgradeAuto(){
         autoLevel++;
 
         clearInterval(autoInterval);
-        autoInterval = setInterval(generate, 3000 - (autoLevel * 200));
+        let speed = Math.max(500, 3000 - (autoLevel * 200));
+        
+        autoInterval = setInterval(generate, speed);
 
         autoPrice = Math.floor(autoPrice * 1.8);
 
