@@ -1,19 +1,33 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Name Generator</title>
-<link rel="stylesheet" href="style.css">
+    <title>Tuff Name Generator</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<h1>Auto Name Generator</h1>
+<h1>Tuff Name Generator</h1>
 
-<button onclick="generate()">Generate Name</button>
+<div class="generator">
+    <div id="result">Click Generate</div>
+    <div id="rarity"></div>
+    <button onclick="generate()">Generate</button>
+</div>
 
-<h2 id="result"></h2>
+<div class="stats">
+    <p>Coins: <span id="coins">0</span></p>
+</div>
+
+<div class="shop">
+    <h2>Shop</h2>
+    <button onclick="buyLuck()">Upgrade Luck (50 coins)</button>
+    <button onclick="buyAuto()">Auto Generate (200 coins)</button>
+
+    <h3>Enter Code</h3>
+    <input id="codeBox" placeholder="Enter code">
+    <button onclick="redeemCode()">Redeem</button>
+</div>
 
 <script src="script.js"></script>
-
 </body>
 </html>
