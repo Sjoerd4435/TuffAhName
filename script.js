@@ -130,6 +130,15 @@ function triggerOverlay(rarity){
         body.style.animation = "beam 1s ease";
     }
 
+    if(rarity.class === "abyssal"){
+    const flood = document.getElementById("abyssalFlood");
+    flood.classList.add("active");
+
+    setTimeout(() => {
+        flood.classList.remove("active");
+    }, 1400);
+    }
+
     setTimeout(()=>{
     overlay.classList.remove(
         "overlay-active",
