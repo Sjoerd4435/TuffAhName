@@ -76,36 +76,22 @@ function getRarity(){
         {name:"TUFF GOD", class:"tuffgod", value:100000, weight:0.01}
     ];
 
-    const luck = getLuckMultiplier();
+    const totalWeight = rarities.reduce((sum, r) => sum + r.weight, 0);
 
-    const scaled = rarities.map((r, index) => {
+    // 🔥 THIS IS THE MAGIC
+    const luckPower = 1 + Math.log10(1 + luckBoost * 100);
 
-        // Rarity tier index (0 = Common, highest = TUFF GOD)
-        const tier = index / (rarities.length - 1);
+    // Bias the roll upward
+    let roll = Math.pow(Math.random(), 1 / luckPower) * totalWeight;
 
-        // Luck influence curve (smooth, capped growth)
-        const luckFactor = 1 + (tier * Math.log10(1 + luck + 1));
-
-        // Reduce common weight slightly
-        const commonReduction = 1 - (0.4 * tier * Math.min(1, luck / 100));
-
-        return {
-            ...r,
-            weight: r.weight * luckFactor * commonReduction
-        };
-    });
-
-    const totalWeight = scaled.reduce((sum, r) => sum + r.weight, 0);
-    let roll = Math.random() * totalWeight;
-
-    for(let r of scaled){
+    for(let r of rarities){
         if(roll < r.weight){
             return r;
         }
         roll -= r.weight;
     }
 
-    return scaled[0]; // fallback safety
+    return rarities[0];
 }
 
 function makeRarity(name, css, value){
