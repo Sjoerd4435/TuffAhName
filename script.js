@@ -152,6 +152,51 @@ function updateInventory(){
     }
 }
 
+function forceRarity(rarityName){
+
+    const rarities = {
+        "Common":"common",
+        "Uncommon":"uncommon",
+        "Rare":"rare",
+        "Epic":"epic",
+        "Legendary":"legendary",
+        "Mythic":"mythic",
+        "Divine":"divine",
+        "Celestial":"celestial",
+        "Transcendent":"transcendent",
+        "Ethereal":"ethereal",
+        "Abyssal":"abyssal",
+        "Chrono":"chrono",
+        "Voidborn":"voidborn",
+        "Omniversal":"omniversal",
+        "TUFF GOD":"tuffgod"
+    };
+
+    const resultDiv = document.getElementById("result");
+    const rarityDiv = document.getElementById("rarity");
+
+    const className = rarities[rarityName];
+
+    if(!className){
+        console.log("Invalid rarity name");
+        return;
+    }
+
+    const rarity = {
+        name: rarityName,
+        class: className,
+        value: 0
+    };
+
+    resultDiv.innerText = "FORCED ROLL";
+    rarityDiv.innerText = rarityName;
+    rarityDiv.className = className;
+
+    triggerOverlay(rarity);
+
+    console.log("Forced rarity:", rarityName);
+}
+
 function generate(){
 
     const resultDiv = document.getElementById("result");
@@ -211,7 +256,7 @@ function upgradeLuck(){
 
         updateCoins();
         updateLuckDisplay();
-        document.getElementById("luckPrice").innerText = luckPrice;
+        document.getElementById("luckDisplay").innerText = "Luck: " + (Math.min(999999, luckBoost * 100)).toFixed(2) + "%";
     }
 }
 function upgradeAuto(){
