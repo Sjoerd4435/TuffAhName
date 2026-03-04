@@ -40,7 +40,7 @@ const borsboom_list = [
 "Borsneo","Borsnova","Borsprime","Borsbase","Borsweb","Borsnetto","Borslab","Borssys","Borslogic","Borscore"
 ];
 
-
+let isRolling = false;
 let coins = 0;
 let inventory = {};
 let luckBoost = 0;
@@ -136,7 +136,7 @@ function triggerOverlay(rarity){
         "omniversal-overlay",
         "tuffgod-overlay"
     );
-},1200);
+},1400);
 }
 
 function updateInventory(){
@@ -198,7 +198,10 @@ function forceRarity(rarityName){
 }
 
 function generate(){
-
+    if(isRolling) return;
+    
+    isRolling = true;
+    
     const resultDiv = document.getElementById("result");
     const rarityDiv = document.getElementById("rarity");
 
@@ -231,8 +234,9 @@ function generate(){
 
         coins += rarity.value;
         updateCoins();
+        isRolling = false;
 
-    }, 500);
+    }, 1500);
 }
 
 function updateCoins(){
