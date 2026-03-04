@@ -290,3 +290,5 @@ function redeemCode(){
         alert("DEV MODE ACTIVATED 😈");
     }
 }
+
+window.triggerOverlay = triggerOverlay;
