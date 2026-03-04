@@ -76,22 +76,36 @@ function getRarity(){
         {name:"TUFF GOD", class:"tuffgod", value:100000, weight:0.01}
     ];
 
-    const BASE_RARITIES = [...rarities];
+    const luck = getLuckMultiplier();
 
-    const scaledRarities = rarities.map(r => ({
-    ...r,
-    weight: r.weight * (r.weight < 1000 ? (1 + getLuckMultiplier()) : 1)
-}));
+    const scaled = rarities.map((r, index) => {
 
-    let totalWeight = scaledRarities.reduce((sum, r) => sum + r.weight, 0);
+        // Rarity tier index (0 = Common, highest = TUFF GOD)
+        const tier = index / (rarities.length - 1);
+
+        // Luck influence curve (smooth, capped growth)
+        const luckFactor = 1 + (tier * Math.log10(1 + luck + 1));
+
+        // Reduce common weight slightly
+        const commonReduction = 1 - (0.4 * tier * Math.min(1, luck / 100));
+
+        return {
+            ...r,
+            weight: r.weight * luckFactor * commonReduction
+        };
+    });
+
+    const totalWeight = scaled.reduce((sum, r) => sum + r.weight, 0);
     let roll = Math.random() * totalWeight;
 
-    for(let r of scaledRarities){
+    for(let r of scaled){
         if(roll < r.weight){
             return r;
         }
         roll -= r.weight;
     }
+
+    return scaled[0]; // fallback safety
 }
 
 function makeRarity(name, css, value){
@@ -136,7 +150,8 @@ function triggerOverlay(rarity){
         "omniversal-overlay",
         "tuffgod-overlay"
     );
-},1400);
+    body.style.animation = "";
+},1600);
 }
 
 function updateInventory(){
@@ -148,7 +163,11 @@ function updateInventory(){
     invDiv.innerHTML = "<h3>Inventory</h3>";
 
     for(const key in inventory){
-        invDiv.innerHTML += key + ": " + inventory[key] + "<br>";
+        let html = "<h3>Inventory</h3>";
+        for(const key in inventory){
+            html += key + ": " + inventory[key] + "<br>";
+        }
+        invDiv.innerHTML = html;
     }
 }
 
@@ -260,6 +279,7 @@ function upgradeLuck(){
 
         updateCoins();
         updateLuckDisplay();
+        document.getElementById("luckPrice").innerText = luckPrice;
         document.getElementById("luckDisplay").innerText = "Luck: " + (Math.min(999999, luckBoost * 100)).toFixed(2) + "%";
     }
 }
