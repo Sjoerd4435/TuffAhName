@@ -40,6 +40,7 @@ const borsboom_list = [
 "Borsneo","Borsnova","Borsprime","Borsbase","Borsweb","Borsnetto","Borslab","Borssys","Borslogic","Borscore"
 ];
 
+const BASE_RARITIES = [...rarities];
 let coins = 0;
 let inventory = {};
 let luckBoost = 0;
@@ -75,19 +76,16 @@ function getRarity(){
         {name:"TUFF GOD", class:"tuffgod", value:100000, weight:0.01}
     ];
 
-    // Apply luck scaling ONLY to rare tiers
-    rarities.forEach(r => {
-    let boostMultiplier = 1 + getLuckMultiplier();
-
-    if(r.weight < 1000){
-        r.weight = r.weight * boostMultiplier;
-    }
+    const scaledRarities = rarities.map(r => ({
+    ...r,
+    weight: r.weight * (r.weight < 1000 ? (1 + getLuckMultiplier()) : 1)
+}));
 });
 
-    let totalWeight = rarities.reduce((sum, r) => sum + r.weight, 0);
+    let totalWeight = scaledRarities.reduce((sum, r) => sum + r.weight, 0);
     let roll = Math.random() * totalWeight;
 
-    for(let r of rarities){
+    for(let r of scaledRarities){
         if(roll < r.weight){
             return r;
         }
@@ -100,10 +98,7 @@ function makeRarity(name, css, value){
 }
 
 function getLuckMultiplier(){
-
-    // Convert luckBoost into realistic probability impact
-
-    return Math.log10(1 + luckBoost * 100);
+    return Math.pow(1 + luckBoost, 1.5) - 1;
 }
 
 function triggerOverlay(rarity){
@@ -135,8 +130,12 @@ function triggerOverlay(rarity){
     }
 
     setTimeout(()=>{
-        overlay.className = "";
-    },900);
+    overlay.classList.remove(
+        "overlay-active",
+        "omniversal-overlay",
+        "tuffgod-overlay"
+    );
+},1200);
 }
 
 function updateInventory(){
