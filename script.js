@@ -80,7 +80,6 @@ function getRarity(){
     ...r,
     weight: r.weight * (r.weight < 1000 ? (1 + getLuckMultiplier()) : 1)
 }));
-});
 
     let totalWeight = scaledRarities.reduce((sum, r) => sum + r.weight, 0);
     let roll = Math.random() * totalWeight;
