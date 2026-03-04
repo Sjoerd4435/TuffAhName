@@ -77,7 +77,7 @@ function getRarity(){
 
     // Apply luck scaling ONLY to rare tiers
     rarities.forEach(r => {
-    let boostMultiplier = 1 + (luckBoost * 8);
+    let boostMultiplier = 1 + getLuckMultiplier();
 
     if(r.weight < 1000){
         r.weight = r.weight * boostMultiplier;
@@ -97,6 +97,13 @@ function getRarity(){
 
 function makeRarity(name, css, value){
     return {name:name, class:css, value:value};
+}
+
+function getLuckMultiplier(){
+
+    // Convert luckBoost into realistic probability impact
+
+    return Math.log10(1 + luckBoost * 100);
 }
 
 function triggerOverlay(rarity){
