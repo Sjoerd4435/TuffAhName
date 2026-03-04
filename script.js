@@ -40,7 +40,7 @@ const borsboom_list = [
 "Borsneo","Borsnova","Borsprime","Borsbase","Borsweb","Borsnetto","Borslab","Borssys","Borslogic","Borscore"
 ];
 
-const BASE_RARITIES = [...rarities];
+
 let coins = 0;
 let inventory = {};
 let luckBoost = 0;
@@ -75,6 +75,8 @@ function getRarity(){
         {name:"Omniversal", class:"omniversal", value:25000, weight:0.05},
         {name:"TUFF GOD", class:"tuffgod", value:100000, weight:0.01}
     ];
+
+    const BASE_RARITIES = [...rarities];
 
     const scaledRarities = rarities.map(r => ({
     ...r,
