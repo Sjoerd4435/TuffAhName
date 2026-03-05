@@ -173,4 +173,50 @@ button{
     animation: waterMove 1.4s linear;
 }
 
+#celestialSky {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at center, #0b0f2a 0%, #000814 100%);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 9998;
+    transition: opacity 1s ease;
+    overflow: hidden;
+}
 
+#celestialSky.active {
+    opacity: 1;
+}
+
+.moon {
+    position: absolute;
+    top: 15%;
+    right: 15%;
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, #fff 40%, #ddd 60%, #aaa 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 40px rgba(255,255,255,0.8);
+    animation: moonGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes moonGlow {
+    from { box-shadow: 0 0 30px rgba(255,255,255,0.6); }
+    to   { box-shadow: 0 0 60px rgba(255,255,255,1); }
+}
+
+.stars {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(2px 2px at 20% 30%, white 100%, transparent),
+                      radial-gradient(2px 2px at 70% 60%, white 100%, transparent),
+                      radial-gradient(2px 2px at 40% 80%, white 100%, transparent),
+                      radial-gradient(2px 2px at 85% 25%, white 100%, transparent),
+                      radial-gradient(2px 2px at 10% 70%, white 100%, transparent);
+    animation: twinkle 2s infinite alternate;
+}
+
+@keyframes twinkle {
+    from { opacity: 0.5; }
+    to   { opacity: 1; }
+}
