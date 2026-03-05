@@ -138,6 +138,17 @@ function triggerOverlay(rarity){
         flood.classList.remove("active");
     }, 1400);
     }
+    if(rarity.class === "celestial"){
+    const sky = document.getElementById("celestialSky");
+
+    if(sky){
+        sky.classList.add("active");
+
+        setTimeout(() => {
+            sky.classList.remove("active");
+        }, 2000);
+    }
+}
 
     setTimeout(()=>{
     overlay.classList.remove(
