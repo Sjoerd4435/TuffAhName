@@ -76,24 +76,24 @@ function getRarity(){
         {name:"TUFF GOD",      class:"tuffgod",       value:100000, weight:0.01}
     ];
 
-    const totalWeight = rarities.reduce((sum, r) => sum + r.weight, 0);
+    // Sort rarest first so TUFF GOD sits at the lowest cumulative range
+    const sorted = [...rarities].sort((a, b) => a.weight - b.weight);
+    const totalWeight = sorted.reduce((sum, r) => sum + r.weight, 0);
 
-    // Build cumulative thresholds from rarest -> most common
-    // So the TOP of the range (near totalWeight) = rarest tiers
-    const sorted = [...rarities].reverse(); // rarest first
-    let cumulative = 0;
+    // Build cumulative thresholds rarest → most common
+    let cum = 0;
     const thresholds = sorted.map(r => {
-        cumulative += r.weight;
-        return { rarity: r, threshold: cumulative };
+        cum += r.weight;
+        return { rarity: r, threshold: cum };
     });
 
-    // luckPower: at 0% boost = 1 (flat), at 99000% boost = very high
-    // Math.pow(random, 1/luckPower) skews random toward 1.0
-    // Multiplied by totalWeight → biases the roll toward the TOP = rare tiers
+    // Math.pow(random, luckPower) skews the roll TOWARD 0
+    // Rare tiers live at the low end of cumulative range, so high luck = low roll = rare
+    // At 0% luck: luckPower=1, flat random, weights respected normally
+    // At 99000% luck: luckPower~100, roll almost always near 0 = TUFF GOD
     const luckPower = 1 + Math.sqrt(luckBoost * 10);
-    const roll = Math.pow(Math.random(), 1 / luckPower) * totalWeight;
+    const roll = Math.pow(Math.random(), luckPower) * totalWeight;
 
-    // Walk thresholds: first one that exceeds the roll wins
     for(const entry of thresholds){
         if(roll < entry.threshold){
             return entry.rarity;
