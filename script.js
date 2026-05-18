@@ -78,25 +78,29 @@ function getRarity(){
 
     const totalWeight = rarities.reduce((sum, r) => sum + r.weight, 0);
 
-    // luckBoost of 1.0 = 100%, so at 99000% luckBoost = 990
-    // luckPower scales aggressively: at 0% luck → 1.0 (no change)
-    // at 100% luck → ~2.0, at 1000% → ~4.0, at 99000% → ~20+
-    // This makes Math.pow(rand, 1/luckPower) skew HARD toward totalWeight
+    // Build cumulative thresholds from rarest -> most common
+    // So the TOP of the range (near totalWeight) = rarest tiers
+    const sorted = [...rarities].reverse(); // rarest first
+    let cumulative = 0;
+    const thresholds = sorted.map(r => {
+        cumulative += r.weight;
+        return { rarity: r, threshold: cumulative };
+    });
+
+    // luckPower: at 0% boost = 1 (flat), at 99000% boost = very high
+    // Math.pow(random, 1/luckPower) skews random toward 1.0
+    // Multiplied by totalWeight → biases the roll toward the TOP = rare tiers
     const luckPower = 1 + Math.sqrt(luckBoost * 10);
+    const roll = Math.pow(Math.random(), 1 / luckPower) * totalWeight;
 
-    // Biased roll: higher luckPower = random() skews toward 1.0 = end of rarities array
-    // So we reverse the rarities so rarest is at the END, roll biased toward end
-    let roll = Math.pow(Math.random(), 1 / luckPower) * totalWeight;
-
-    // Walk from rarest to most common so high rolls hit rare tiers
-    for(let i = rarities.length - 1; i >= 0; i--){
-        if(roll < rarities[i].weight){
-            return rarities[i];
+    // Walk thresholds: first one that exceeds the roll wins
+    for(const entry of thresholds){
+        if(roll < entry.threshold){
+            return entry.rarity;
         }
-        roll -= rarities[i].weight;
     }
 
-    return rarities[rarities.length - 1];
+    return sorted[sorted.length - 1];
 }
 
 function triggerOverlay(rarity){
