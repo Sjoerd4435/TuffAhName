@@ -59,47 +59,44 @@ function rand(arr){
 function getRarity(){
 
     const rarities = [
-        {name:"Common", class:"common", value:1, weight:5000},
-        {name:"Uncommon", class:"uncommon", value:3, weight:2500},
-        {name:"Rare", class:"rare", value:8, weight:1200},
-        {name:"Epic", class:"epic", value:20, weight:600},
-        {name:"Legendary", class:"legendary", value:50, weight:250},
-        {name:"Mythic", class:"mythic", value:100, weight:120},
-        {name:"Divine", class:"divine", value:200, weight:50},
-        {name:"Celestial", class:"celestial", value:400, weight:20},
-        {name:"Transcendent", class:"transcendent", value:800, weight:8},
-        {name:"Ethereal", class:"ethereal", value:1500, weight:3},
-        {name:"Abyssal", class:"abyssal", value:3000, weight:1},
-        {name:"Chrono", class:"chrono", value:6000, weight:0.5},
-        {name:"Voidborn", class:"voidborn", value:12000, weight:0.2},
-        {name:"Omniversal", class:"omniversal", value:25000, weight:0.05},
-        {name:"TUFF GOD", class:"tuffgod", value:100000, weight:0.01}
+        {name:"Common",        class:"common",        value:1,      weight:5000},
+        {name:"Uncommon",      class:"uncommon",      value:3,      weight:2500},
+        {name:"Rare",          class:"rare",           value:8,      weight:1200},
+        {name:"Epic",          class:"epic",           value:20,     weight:600},
+        {name:"Legendary",     class:"legendary",     value:50,     weight:250},
+        {name:"Mythic",        class:"mythic",        value:100,    weight:120},
+        {name:"Divine",        class:"divine",        value:200,    weight:50},
+        {name:"Celestial",     class:"celestial",     value:400,    weight:20},
+        {name:"Transcendent",  class:"transcendent",  value:800,    weight:8},
+        {name:"Ethereal",      class:"ethereal",      value:1500,   weight:3},
+        {name:"Abyssal",       class:"abyssal",       value:3000,   weight:1},
+        {name:"Chrono",        class:"chrono",        value:6000,   weight:0.5},
+        {name:"Voidborn",      class:"voidborn",      value:12000,  weight:0.2},
+        {name:"Omniversal",    class:"omniversal",    value:25000,  weight:0.05},
+        {name:"TUFF GOD",      class:"tuffgod",       value:100000, weight:0.01}
     ];
 
     const totalWeight = rarities.reduce((sum, r) => sum + r.weight, 0);
 
-    // 🔥 THIS IS THE MAGIC
-    const luckPower = 1 + Math.log10(1 + luckBoost * 100);
+    // luckBoost of 1.0 = 100%, so at 99000% luckBoost = 990
+    // luckPower scales aggressively: at 0% luck → 1.0 (no change)
+    // at 100% luck → ~2.0, at 1000% → ~4.0, at 99000% → ~20+
+    // This makes Math.pow(rand, 1/luckPower) skew HARD toward totalWeight
+    const luckPower = 1 + Math.sqrt(luckBoost * 10);
 
-    // Bias the roll upward
+    // Biased roll: higher luckPower = random() skews toward 1.0 = end of rarities array
+    // So we reverse the rarities so rarest is at the END, roll biased toward end
     let roll = Math.pow(Math.random(), 1 / luckPower) * totalWeight;
 
-    for(let r of rarities){
-        if(roll < r.weight){
-            return r;
+    // Walk from rarest to most common so high rolls hit rare tiers
+    for(let i = rarities.length - 1; i >= 0; i--){
+        if(roll < rarities[i].weight){
+            return rarities[i];
         }
-        roll -= r.weight;
+        roll -= rarities[i].weight;
     }
 
-    return rarities[0];
-}
-
-function makeRarity(name, css, value){
-    return {name:name, class:css, value:value};
-}
-
-function getLuckMultiplier(){
-    return Math.pow(1 + luckBoost, 1.5) - 1;
+    return rarities[rarities.length - 1];
 }
 
 function triggerOverlay(rarity){
@@ -119,62 +116,56 @@ function triggerOverlay(rarity){
         overlay.classList.add("overlay-active","tuffgod-overlay");
     }
     if(rarity.class === "mythic" || rarity.class === "divine"){
-    body.style.animation = "cosmicWarp 1s ease";
+        body.style.animation = "cosmicWarp 1s ease";
     }
     
     if(rarity.class === "abyssal" || rarity.class === "chrono"){
         body.style.animation = "voidCollapse 1s ease";
     }
     
-    if(rarity.class === "celestial" ){
+    if(rarity.class === "celestial"){
         body.style.animation = "beam 1s ease";
     }
 
     if(rarity.class === "abyssal"){
-    const flood = document.getElementById("abyssalFlood");
-    flood.classList.add("active");
-
-    setTimeout(() => {
-        flood.classList.remove("active");
-    }, 1400);
-    }
-    if(rarity.class === "celestial"){
-    const sky = document.getElementById("celestialSky");
-
-    if(sky){
-        sky.classList.add("active");
-
+        const flood = document.getElementById("abyssalFlood");
+        flood.classList.add("active");
         setTimeout(() => {
-            sky.classList.remove("active");
-        }, 2000);
+            flood.classList.remove("active");
+        }, 1400);
     }
-}
+
+    if(rarity.class === "celestial"){
+        const sky = document.getElementById("celestialSky");
+        if(sky){
+            sky.classList.add("active");
+            setTimeout(() => {
+                sky.classList.remove("active");
+            }, 2000);
+        }
+    }
 
     setTimeout(()=>{
-    overlay.classList.remove(
-        "overlay-active",
-        "omniversal-overlay",
-        "tuffgod-overlay"
-    );
-    body.style.animation = "";
-},1600);
+        overlay.classList.remove(
+            "overlay-active",
+            "omniversal-overlay",
+            "tuffgod-overlay"
+        );
+        body.style.animation = "";
+    }, 1600);
 }
 
 function updateInventory(){
 
     const invDiv = document.getElementById("inventory");
-
     if(!invDiv) return;
 
-    invDiv.innerHTML = "<h3>Inventory</h3>";
-
+    // Fixed: was double-looping before, now clean
+    let html = "<h3>Inventory</h3>";
     for(const key in inventory){
-        let html = "<h3>Inventory</h3>";
-        for(const key in inventory){
-            html += key + ": " + inventory[key] + "<br>";
-        }
-        invDiv.innerHTML = html;
+        html += key + ": " + inventory[key] + "<br>";
     }
+    invDiv.innerHTML = html;
 }
 
 function forceRarity(rarityName){
@@ -197,6 +188,14 @@ function forceRarity(rarityName){
         "TUFF GOD":"tuffgod"
     };
 
+    // Value map so forced rolls actually give coins
+    const values = {
+        "common":1,"uncommon":3,"rare":8,"epic":20,"legendary":50,
+        "mythic":100,"divine":200,"celestial":400,"transcendent":800,
+        "ethereal":1500,"abyssal":3000,"chrono":6000,"voidborn":12000,
+        "omniversal":25000,"tuffgod":100000
+    };
+
     const resultDiv = document.getElementById("result");
     const rarityDiv = document.getElementById("rarity");
 
@@ -210,12 +209,19 @@ function forceRarity(rarityName){
     const rarity = {
         name: rarityName,
         class: className,
-        value: 0
+        value: values[className] || 0  // Fixed: forced rolls now give proper coins
     };
 
     resultDiv.innerText = "FORCED ROLL";
     rarityDiv.innerText = rarityName;
     rarityDiv.className = className;
+
+    coins += rarity.value;
+    updateCoins();
+
+    if(!inventory[rarity.name]) inventory[rarity.name] = 0;
+    inventory[rarity.name]++;
+    updateInventory();
 
     triggerOverlay(rarity);
 
@@ -230,7 +236,6 @@ function generate(){
     const resultDiv = document.getElementById("result");
     const rarityDiv = document.getElementById("rarity");
 
-    // Roll animation
     resultDiv.innerText = "Rolling...";
     rarityDiv.innerText = "";
     resultDiv.className = "";
@@ -251,9 +256,7 @@ function generate(){
         rarityDiv.innerText = rarity.name;
         rarityDiv.className = rarity.class;
 
-        if(!inventory[rarity.name]){
-            inventory[rarity.name] = 0;
-        }
+        if(!inventory[rarity.name]) inventory[rarity.name] = 0;
         inventory[rarity.name]++;
         updateInventory();
 
@@ -284,11 +287,12 @@ function upgradeLuck(){
         luckPrice = Math.floor(luckPrice * 1.6);
 
         updateCoins();
-        updateLuckDisplay();
         document.getElementById("luckPrice").innerText = luckPrice;
-        document.getElementById("luckDisplay").innerText = "Luck: " + (Math.min(999999, luckBoost * 100)).toFixed(2) + "%";
+        document.getElementById("luckDisplay").innerText =
+            "Luck: " + (Math.min(999999, luckBoost * 100)).toFixed(2) + "%";
     }
 }
+
 function upgradeAuto(){
     if(coins >= autoPrice){
         coins -= autoPrice;
@@ -296,7 +300,6 @@ function upgradeAuto(){
 
         clearInterval(autoInterval);
         let speed = Math.max(500, 3000 - (autoLevel * 200));
-        
         autoInterval = setInterval(generate, speed);
 
         autoPrice = Math.floor(autoPrice * 1.8);
