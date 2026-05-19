@@ -6,7 +6,7 @@ const finn_list = ["Finn","Fynn","Fin","Finley","Finlay","Finbar","Finnick","Fin
 "Finwell","Finbell","Finzell","Finchell","Finrell","Finwell","Finhill","Finhold","Finford","Finwood",
 "Finstone","Finridge","Finlake","Finshore","Finport","Finbay","Finpark","Finzone","Finfield","Fincrest",
 "Finbrook","Finmount","Finval","Finridge","Finpath","Finroad","Finway","Finlink","Finweb","Fintech",
-"Finart","Finlux","Finmax","Finprime","Finstar","Finblue","Finred","Fingold","Finbright","Finlight"
+"Finart","Finlux","Finmax","Finprime","Finstar","Finblue","Finred","Fingold","Finbright","Finlight","Finnshine","Why so feinius"
 ];
 
 const henrico_list = ["Henrico","Henrigo","Henriko","Enrico","Henrique","Henriek","Henricano","Henricon","Henricus","Henrion",
@@ -37,7 +37,7 @@ const borsboom_list = [
 "Borsroute","Borspadje","Borswegje","Borsplein","Borshaven","Borsberg","Borsbergje","Borssteen","Borshout","Borsgroen",
 "Borsblauw","Borsrood","Borswit","Borsgoud","Borslicht","Borsnacht","Borsdag","Borsjaar","Borsstadje","Borshuis",
 "Borsvilla","Borscentrum","Borswereld","Borszonee","Borscore","Borsdata","Borstech","Borsai","Borsaii","Borsmax",
-"Borsneo","Borsnova","Borsprime","Borsbase","Borsweb","Borsnetto","Borslab","Borssys","Borslogic","Borscore"
+"Borsneo","Borsnova","Borsprime","Borsbase","Borsweb","Borsnetto","Borslab","Borssys","Borslogic","Borscore", "Korstmos"
 ];
 
 let isRolling = false;
@@ -175,211 +175,185 @@ function triggerOverlay(rarity){
 function playSkibidiAnimation(){
     return new Promise((resolve) => {
 
-        // Build the fullscreen canvas overlay
         let canvas = document.getElementById("skibidiCanvas");
-        if(!canvas){
-            canvas = document.createElement("canvas");
-            canvas.id = "skibidiCanvas";
-            canvas.style.cssText = `
-                position:fixed; top:0; left:0; width:100vw; height:100vh;
-                z-index:99999; pointer-events:none;
-            `;
-            document.body.appendChild(canvas);
-        }
+        if(canvas) canvas.remove();
 
-        const W = canvas.width  = window.innerWidth;
-        const H = canvas.height = window.innerHeight;
+        canvas = document.createElement("canvas");
+        canvas.id = "skibidiCanvas";
+        // Direct on body, z-index 99999 beats your existing 9999 overlays
+        // position:fixed works on body-level elements even in most sandboxes
+        canvas.style.cssText = "position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;pointer-events:none;";
+        document.body.appendChild(canvas);
+
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const W = canvas.width;
+        const H = canvas.height;
         const ctx = canvas.getContext("2d");
 
-        canvas.style.display = "block";
-
-        // Animation state
         let frame = 0;
-        const TOTAL_FRAMES = 180; // 3 seconds at 60fps
-
-        // Laser beams state
+        const TOTAL = 200; // ~3.3s at 60fps
         const lasers = [];
-        let toiletX = -200;
+        let toiletX = -180;
         const toiletY = H * 0.5;
-        let phase = "walk"; // walk → shoot → exit
+        let phase = "walk";
 
         function addLaser(){
-            lasers.push({
-                x: toiletX + 110,
-                y: toiletY - 60,
-                angle: (Math.random() - 0.5) * 0.6,
-                speed: 18 + Math.random() * 12,
-                life: 1,
-                color: `hsl(${Math.random()*60 + 180}, 100%, 60%)`
-            });
+            const angle = (Math.random() - 0.5) * 1.2;
+            lasers.push({ x: toiletX + 110, y: toiletY - 80, angle, life: 1.0,
+                          color: `hsl(${Math.random()*80+160},100%,65%)` });
         }
 
-        function drawToilet(x, y, bobOffset){
+        function drawBg(){
+            const flash = phase === "shoot" ? Math.abs(Math.sin(frame * 0.4)) * 60 : 0;
+            ctx.fillStyle = `rgb(${flash},0,${Math.floor(flash * 0.3)})`;
+            ctx.fillRect(0, 0, W, H);
+
             ctx.save();
-            ctx.translate(x, y + bobOffset);
-
-            // toilet base / bowl
-            ctx.fillStyle = "#e8e8e8";
-            ctx.beginPath();
-            ctx.ellipse(60, 100, 55, 35, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillRect(10, 70, 100, 45);
-
-            // toilet tank
-            ctx.fillStyle = "#d0d0d0";
-            ctx.fillRect(20, 20, 80, 55);
-            ctx.fillStyle = "#c0c0c0";
-            ctx.fillRect(15, 15, 90, 10);
-
-            // toilet seat
-            ctx.strokeStyle = "#bbb";
-            ctx.lineWidth = 6;
-            ctx.beginPath();
-            ctx.ellipse(60, 85, 48, 22, 0, 0, Math.PI * 2);
-            ctx.stroke();
-
-            // FACE on the tank
-            // head glow
-            ctx.shadowColor = "#ff0";
-            ctx.shadowBlur = 20;
-
-            // eyes
-            ctx.fillStyle = "#ff4444";
-            ctx.beginPath(); ctx.ellipse(38, 40, 10, 13, -0.2, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.ellipse(82, 40, 10, 13, 0.2, 0, Math.PI*2); ctx.fill();
-
-            // pupils
-            ctx.fillStyle = "#000";
-            ctx.beginPath(); ctx.ellipse(38, 42, 5, 7, 0, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.ellipse(82, 42, 5, 7, 0, 0, Math.PI*2); ctx.fill();
-
-            // evil grin
-            ctx.shadowBlur = 0;
-            ctx.strokeStyle = "#333";
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(30, 62);
-            ctx.quadraticCurveTo(60, 78, 90, 62);
-            ctx.stroke();
-
-            // teeth
-            ctx.fillStyle = "#fff";
-            for(let t = 0; t < 4; t++){
-                ctx.fillRect(36 + t * 12, 62, 9, 10);
-            }
-
-            // legs (walking animation)
-            const legSwing = Math.sin(frame * 0.25) * 15;
-            ctx.fillStyle = "#ccc";
-            ctx.save();
-            ctx.translate(35, 115);
-            ctx.rotate((legSwing * Math.PI) / 180);
-            ctx.fillRect(-6, 0, 12, 40);
-            ctx.restore();
-            ctx.save();
-            ctx.translate(85, 115);
-            ctx.rotate((-legSwing * Math.PI) / 180);
-            ctx.fillRect(-6, 0, 12, 40);
-            ctx.restore();
-
+            ctx.textAlign = "center";
+            ctx.font = `bold ${Math.floor(W * 0.09)}px Impact, sans-serif`;
+            const pulse = 1 + Math.sin(frame * 0.12) * 0.04;
+            ctx.scale(pulse, pulse);
+            ctx.fillStyle = "#ffd700";
+            ctx.fillText("TUFF GOD", W / 2 / pulse, H * 0.22 / pulse);
+            ctx.fillStyle = "#ff6600";
+            ctx.font = `bold ${Math.floor(W * 0.045)}px Impact, sans-serif`;
+            ctx.fillText("YOU ROLLED THE RAREST", W / 2 / pulse, H * 0.3 / pulse);
             ctx.restore();
         }
 
         function drawLasers(){
             for(const l of lasers){
                 ctx.save();
-                ctx.globalAlpha = l.life;
+                ctx.globalAlpha = Math.max(0, l.life);
                 ctx.strokeStyle = l.color;
-                ctx.shadowColor = l.color;
-                ctx.shadowBlur = 15;
-                ctx.lineWidth = 4;
+                ctx.lineWidth = 5;
                 ctx.beginPath();
                 ctx.moveTo(l.x, l.y);
-                ctx.lineTo(l.x + Math.cos(l.angle) * 800, l.y + Math.sin(l.angle) * 800);
+                ctx.lineTo(l.x + Math.cos(l.angle) * W * 1.5,
+                           l.y + Math.sin(l.angle) * W * 1.5);
                 ctx.stroke();
                 ctx.restore();
             }
         }
 
-        function drawBackground(){
-            // Dark flashing bg
-            const flash = phase === "shoot" ? Math.abs(Math.sin(frame * 0.4)) * 0.3 : 0;
-            ctx.fillStyle = `rgba(0,0,0,${0.85 - flash})`;
-            ctx.fillRect(0, 0, W, H);
-
-            // TUFF GOD text
+        function drawToilet(x, y){
+            const bob = Math.sin(frame * 0.3) * 5;
             ctx.save();
-            ctx.font = `bold ${Math.floor(W * 0.1)}px sans-serif`;
-            ctx.textAlign = "center";
-            const pulse = 1 + Math.sin(frame * 0.15) * 0.05;
-            ctx.scale(pulse, pulse);
-            ctx.fillStyle = "#gold";
+            ctx.translate(x, y + bob);
 
-            const grad = ctx.createLinearGradient(0, H*0.15, 0, H*0.3);
-            grad.addColorStop(0, "#ffe066");
-            grad.addColorStop(0.5, "#ff9900");
-            grad.addColorStop(1, "#ff3300");
-            ctx.fillStyle = grad;
-            ctx.shadowColor = "#ff9900";
-            ctx.shadowBlur = 30;
-            ctx.fillText("✨ TUFF GOD ✨", W / 2 / pulse, H * 0.2 / pulse);
+            // Bowl
+            ctx.fillStyle = "#e0e0e0";
+            ctx.beginPath();
+            ctx.ellipse(60, 105, 52, 30, 0, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillRect(12, 75, 96, 40);
+
+            // Tank
+            ctx.fillStyle = "#d4d4d4";
+            ctx.fillRect(18, 18, 84, 60);
+            ctx.fillStyle = "#bcbcbc";
+            ctx.fillRect(13, 13, 94, 10);
+
+            // Seat outline
+            ctx.strokeStyle = "#aaa";
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.ellipse(60, 88, 46, 20, 0, 0, Math.PI*2);
+            ctx.stroke();
+
+            // Eyes (angry)
+            const eyeShift = Math.sin(frame * 0.2) * 2;
+            ctx.fillStyle = "#ff2222";
+            ctx.beginPath(); ctx.ellipse(36+eyeShift, 38, 11, 14, -0.3, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(84+eyeShift, 38, 11, 14,  0.3, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = "#000";
+            ctx.beginPath(); ctx.ellipse(36+eyeShift, 40, 5, 7, 0, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(84+eyeShift, 40, 5, 7, 0, 0, Math.PI*2); ctx.fill();
+            // Eye glints
+            ctx.fillStyle = "#fff";
+            ctx.beginPath(); ctx.ellipse(38+eyeShift, 36, 2, 3, 0, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(86+eyeShift, 36, 2, 3, 0, 0, Math.PI*2); ctx.fill();
+
+            // Grin
+            ctx.strokeStyle = "#222";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(28, 62);
+            ctx.quadraticCurveTo(60, 80, 92, 62);
+            ctx.stroke();
+
+            // Teeth
+            ctx.fillStyle = "#fff";
+            for(let t=0;t<5;t++) ctx.fillRect(32 + t*11, 62, 9, 10);
+
+            // Legs walking
+            const swing = Math.sin(frame * 0.28) * 18;
+            ctx.fillStyle = "#c8c8c8";
+            ctx.save(); ctx.translate(36, 118); ctx.rotate(swing * Math.PI/180);
+            ctx.fillRect(-7, 0, 14, 42); ctx.restore();
+            ctx.save(); ctx.translate(84, 118); ctx.rotate(-swing * Math.PI/180);
+            ctx.fillRect(-7, 0, 14, 42); ctx.restore();
+
+            // Laser barrel (mouth area)
+            if(phase === "shoot"){
+                const barrelFlash = Math.abs(Math.sin(frame * 0.5));
+                ctx.fillStyle = `rgba(0,200,255,${barrelFlash})`;
+                ctx.beginPath();
+                ctx.ellipse(60, 75, 8, 8, 0, 0, Math.PI*2);
+                ctx.fill();
+            }
+
             ctx.restore();
         }
 
-        function loop(){
-            ctx.clearRect(0, 0, W, H);
-            drawBackground();
+        function tick(){
+            ctx.clearRect(0,0,W,H);
+            drawBg();
 
-            const bob = Math.sin(frame * 0.3) * 5;
-
-            // Phase logic
             if(phase === "walk"){
-                toiletX += 6;
-                if(toiletX > W * 0.35){ phase = "shoot"; }
+                toiletX += 7;
+                if(toiletX > W * 0.3) phase = "shoot";
             } else if(phase === "shoot"){
-                // Shoot lasers every 4 frames
-                if(frame % 4 === 0) addLaser();
-                if(frame > 130) phase = "exit";
-            } else if(phase === "exit"){
-                toiletX += 10;
+                if(frame % 5 === 0) addLaser();
+                if(frame > 145) phase = "exit";
+            } else {
+                toiletX += 11;
             }
 
-            // Update lasers
-            for(const l of lasers){
-                l.x += Math.cos(l.angle) * l.speed * 0.1;
-                l.life -= 0.012;
-            }
-            // Remove dead lasers
-            for(let i = lasers.length - 1; i >= 0; i--){
-                if(lasers[i].life <= 0) lasers.splice(i, 1);
+            for(let i = lasers.length-1; i >= 0; i--){
+                lasers[i].life -= 0.015;
+                if(lasers[i].life <= 0) lasers.splice(i,1);
             }
 
             drawLasers();
-            drawToilet(toiletX, toiletY - 160, bob);
+            drawToilet(toiletX, toiletY - 180);
 
             frame++;
 
-            if(frame < TOTAL_FRAMES && toiletX < W + 300){
-                requestAnimationFrame(loop);
+            if(frame < TOTAL && toiletX < W + 250){
+                requestAnimationFrame(tick);
             } else {
                 // Fade out
                 let alpha = 1;
-                const fadeOut = setInterval(() => {
-                    alpha -= 0.08;
-                    ctx.clearRect(0, 0, W, H);
-                    ctx.globalAlpha = alpha;
-                    drawBackground();
+                const fade = setInterval(() => {
+                    alpha -= 0.07;
+                    ctx.clearRect(0,0,W,H);
+                    ctx.save();
+                    ctx.globalAlpha = Math.max(0, alpha);
+                    drawBg();
+                    ctx.restore();
                     if(alpha <= 0){
-                        clearInterval(fadeOut);
-                        canvas.style.display = "none";
-                        ctx.globalAlpha = 1;
+                        clearInterval(fade);
+                        canvas.remove();
                         resolve();
                     }
                 }, 16);
             }
         }
 
-        requestAnimationFrame(loop);
+        requestAnimationFrame(tick);
     });
 }
 
