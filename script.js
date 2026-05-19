@@ -91,7 +91,7 @@ function getRarity(){
     // Rare tiers live at the low end of cumulative range, so high luck = low roll = rare
     // At 0% luck: luckPower=1, flat random, weights respected normally
     // At 99000% luck: luckPower~100, roll almost always near 0 = TUFF GOD
-    const luckPower = 1 + Math.sqrt(luckBoost * 10);
+    const luckPower = 1 + Math.log1p(luckBoost * 3);
     const roll = Math.pow(Math.random(), luckPower) * totalWeight;
 
     for(const entry of thresholds){
@@ -103,60 +103,284 @@ function getRarity(){
     return sorted[sorted.length - 1];
 }
 
+// Returns a Promise that resolves when the animation fully finishes
+// generate() awaits this so rolls cannot fire during any animation
 function triggerOverlay(rarity){
+    return new Promise((resolve) => {
 
-    const overlay = document.getElementById("rarityOverlay");
-    const body = document.body;
+        const overlay = document.getElementById("rarityOverlay");
+        const body = document.body;
 
-    if(!overlay) return;
+        if(!overlay){ resolve(); return; }
 
-    overlay.className = "";
+        overlay.className = "";
 
-    if(rarity.class === "omniversal"){
-        overlay.classList.add("overlay-active","omniversal-overlay");
-    }
-
-    if(rarity.class === "tuffgod"){
-        overlay.classList.add("overlay-active","tuffgod-overlay");
-    }
-    if(rarity.class === "mythic" || rarity.class === "divine"){
-        body.style.animation = "cosmicWarp 1s ease";
-    }
-    
-    if(rarity.class === "abyssal" || rarity.class === "chrono"){
-        body.style.animation = "voidCollapse 1s ease";
-    }
-    
-    if(rarity.class === "celestial"){
-        body.style.animation = "beam 1s ease";
-    }
-
-    if(rarity.class === "abyssal"){
-        const flood = document.getElementById("abyssalFlood");
-        flood.classList.add("active");
-        setTimeout(() => {
-            flood.classList.remove("active");
-        }, 1400);
-    }
-
-    if(rarity.class === "celestial"){
-        const sky = document.getElementById("celestialSky");
-        if(sky){
-            sky.classList.add("active");
-            setTimeout(() => {
-                sky.classList.remove("active");
-            }, 2000);
+        if(rarity.class === "omniversal"){
+            overlay.classList.add("overlay-active","omniversal-overlay");
         }
-    }
 
-    setTimeout(()=>{
-        overlay.classList.remove(
-            "overlay-active",
-            "omniversal-overlay",
-            "tuffgod-overlay"
-        );
-        body.style.animation = "";
-    }, 1600);
+        if(rarity.class === "tuffgod"){
+            overlay.classList.add("overlay-active","tuffgod-overlay");
+            playSkibidiAnimation().then(() => {
+                overlay.classList.remove("overlay-active","tuffgod-overlay");
+                body.style.animation = "";
+                resolve();
+            });
+            return; // tuffgod resolves via playSkibidiAnimation
+        }
+
+        if(rarity.class === "mythic" || rarity.class === "divine"){
+            body.style.animation = "cosmicWarp 1s ease";
+        }
+
+        if(rarity.class === "abyssal" || rarity.class === "chrono"){
+            body.style.animation = "voidCollapse 1s ease";
+        }
+
+        if(rarity.class === "celestial"){
+            body.style.animation = "beam 1s ease";
+        }
+
+        if(rarity.class === "abyssal"){
+            const flood = document.getElementById("abyssalFlood");
+            if(flood){
+                flood.classList.add("active");
+                setTimeout(() => flood.classList.remove("active"), 1400);
+            }
+        }
+
+        if(rarity.class === "celestial"){
+            const sky = document.getElementById("celestialSky");
+            if(sky){
+                sky.classList.add("active");
+                setTimeout(() => sky.classList.remove("active"), 2000);
+            }
+        }
+
+        const duration = rarity.class === "celestial" ? 2000 : 1600;
+        setTimeout(() => {
+            overlay.classList.remove(
+                "overlay-active",
+                "omniversal-overlay",
+                "tuffgod-overlay"
+            );
+            body.style.animation = "";
+            resolve();
+        }, duration);
+    });
+}
+
+/* -------- SKIBIDI TOILET TUFF GOD ANIMATION -------- */
+
+function playSkibidiAnimation(){
+    return new Promise((resolve) => {
+
+        // Build the fullscreen canvas overlay
+        let canvas = document.getElementById("skibidiCanvas");
+        if(!canvas){
+            canvas = document.createElement("canvas");
+            canvas.id = "skibidiCanvas";
+            canvas.style.cssText = `
+                position:fixed; top:0; left:0; width:100vw; height:100vh;
+                z-index:99999; pointer-events:none;
+            `;
+            document.body.appendChild(canvas);
+        }
+
+        const W = canvas.width  = window.innerWidth;
+        const H = canvas.height = window.innerHeight;
+        const ctx = canvas.getContext("2d");
+
+        canvas.style.display = "block";
+
+        // Animation state
+        let frame = 0;
+        const TOTAL_FRAMES = 180; // 3 seconds at 60fps
+
+        // Laser beams state
+        const lasers = [];
+        let toiletX = -200;
+        const toiletY = H * 0.5;
+        let phase = "walk"; // walk → shoot → exit
+
+        function addLaser(){
+            lasers.push({
+                x: toiletX + 110,
+                y: toiletY - 60,
+                angle: (Math.random() - 0.5) * 0.6,
+                speed: 18 + Math.random() * 12,
+                life: 1,
+                color: `hsl(${Math.random()*60 + 180}, 100%, 60%)`
+            });
+        }
+
+        function drawToilet(x, y, bobOffset){
+            ctx.save();
+            ctx.translate(x, y + bobOffset);
+
+            // toilet base / bowl
+            ctx.fillStyle = "#e8e8e8";
+            ctx.beginPath();
+            ctx.ellipse(60, 100, 55, 35, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillRect(10, 70, 100, 45);
+
+            // toilet tank
+            ctx.fillStyle = "#d0d0d0";
+            ctx.fillRect(20, 20, 80, 55);
+            ctx.fillStyle = "#c0c0c0";
+            ctx.fillRect(15, 15, 90, 10);
+
+            // toilet seat
+            ctx.strokeStyle = "#bbb";
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.ellipse(60, 85, 48, 22, 0, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // FACE on the tank
+            // head glow
+            ctx.shadowColor = "#ff0";
+            ctx.shadowBlur = 20;
+
+            // eyes
+            ctx.fillStyle = "#ff4444";
+            ctx.beginPath(); ctx.ellipse(38, 40, 10, 13, -0.2, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(82, 40, 10, 13, 0.2, 0, Math.PI*2); ctx.fill();
+
+            // pupils
+            ctx.fillStyle = "#000";
+            ctx.beginPath(); ctx.ellipse(38, 42, 5, 7, 0, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(82, 42, 5, 7, 0, 0, Math.PI*2); ctx.fill();
+
+            // evil grin
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = "#333";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(30, 62);
+            ctx.quadraticCurveTo(60, 78, 90, 62);
+            ctx.stroke();
+
+            // teeth
+            ctx.fillStyle = "#fff";
+            for(let t = 0; t < 4; t++){
+                ctx.fillRect(36 + t * 12, 62, 9, 10);
+            }
+
+            // legs (walking animation)
+            const legSwing = Math.sin(frame * 0.25) * 15;
+            ctx.fillStyle = "#ccc";
+            ctx.save();
+            ctx.translate(35, 115);
+            ctx.rotate((legSwing * Math.PI) / 180);
+            ctx.fillRect(-6, 0, 12, 40);
+            ctx.restore();
+            ctx.save();
+            ctx.translate(85, 115);
+            ctx.rotate((-legSwing * Math.PI) / 180);
+            ctx.fillRect(-6, 0, 12, 40);
+            ctx.restore();
+
+            ctx.restore();
+        }
+
+        function drawLasers(){
+            for(const l of lasers){
+                ctx.save();
+                ctx.globalAlpha = l.life;
+                ctx.strokeStyle = l.color;
+                ctx.shadowColor = l.color;
+                ctx.shadowBlur = 15;
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(l.x, l.y);
+                ctx.lineTo(l.x + Math.cos(l.angle) * 800, l.y + Math.sin(l.angle) * 800);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        function drawBackground(){
+            // Dark flashing bg
+            const flash = phase === "shoot" ? Math.abs(Math.sin(frame * 0.4)) * 0.3 : 0;
+            ctx.fillStyle = `rgba(0,0,0,${0.85 - flash})`;
+            ctx.fillRect(0, 0, W, H);
+
+            // TUFF GOD text
+            ctx.save();
+            ctx.font = `bold ${Math.floor(W * 0.1)}px sans-serif`;
+            ctx.textAlign = "center";
+            const pulse = 1 + Math.sin(frame * 0.15) * 0.05;
+            ctx.scale(pulse, pulse);
+            ctx.fillStyle = "#gold";
+
+            const grad = ctx.createLinearGradient(0, H*0.15, 0, H*0.3);
+            grad.addColorStop(0, "#ffe066");
+            grad.addColorStop(0.5, "#ff9900");
+            grad.addColorStop(1, "#ff3300");
+            ctx.fillStyle = grad;
+            ctx.shadowColor = "#ff9900";
+            ctx.shadowBlur = 30;
+            ctx.fillText("✨ TUFF GOD ✨", W / 2 / pulse, H * 0.2 / pulse);
+            ctx.restore();
+        }
+
+        function loop(){
+            ctx.clearRect(0, 0, W, H);
+            drawBackground();
+
+            const bob = Math.sin(frame * 0.3) * 5;
+
+            // Phase logic
+            if(phase === "walk"){
+                toiletX += 6;
+                if(toiletX > W * 0.35){ phase = "shoot"; }
+            } else if(phase === "shoot"){
+                // Shoot lasers every 4 frames
+                if(frame % 4 === 0) addLaser();
+                if(frame > 130) phase = "exit";
+            } else if(phase === "exit"){
+                toiletX += 10;
+            }
+
+            // Update lasers
+            for(const l of lasers){
+                l.x += Math.cos(l.angle) * l.speed * 0.1;
+                l.life -= 0.012;
+            }
+            // Remove dead lasers
+            for(let i = lasers.length - 1; i >= 0; i--){
+                if(lasers[i].life <= 0) lasers.splice(i, 1);
+            }
+
+            drawLasers();
+            drawToilet(toiletX, toiletY - 160, bob);
+
+            frame++;
+
+            if(frame < TOTAL_FRAMES && toiletX < W + 300){
+                requestAnimationFrame(loop);
+            } else {
+                // Fade out
+                let alpha = 1;
+                const fadeOut = setInterval(() => {
+                    alpha -= 0.08;
+                    ctx.clearRect(0, 0, W, H);
+                    ctx.globalAlpha = alpha;
+                    drawBackground();
+                    if(alpha <= 0){
+                        clearInterval(fadeOut);
+                        canvas.style.display = "none";
+                        ctx.globalAlpha = 1;
+                        resolve();
+                    }
+                }, 16);
+            }
+        }
+
+        requestAnimationFrame(loop);
+    });
 }
 
 function updateInventory(){
@@ -232,7 +456,7 @@ function forceRarity(rarityName){
     console.log("Forced rarity:", rarityName);
 }
 
-function generate(){
+async function generate(){
     if(isRolling) return;
     
     isRolling = true;
@@ -244,31 +468,30 @@ function generate(){
     rarityDiv.innerText = "";
     resultDiv.className = "";
 
-    setTimeout(() => {
+    await new Promise(r => setTimeout(r, 1500));
 
-        const name =
-            rand(finn_list) + " " +
-            rand(henrico_list) + " " +
-            rand(corne_list) + " " +
-            rand(borsboom_list);
+    const name =
+        rand(finn_list) + " " +
+        rand(henrico_list) + " " +
+        rand(corne_list) + " " +
+        rand(borsboom_list);
 
-        const rarity = getRarity();
+    const rarity = getRarity();
 
-        triggerOverlay(rarity);
+    resultDiv.innerText = name;
+    rarityDiv.innerText = rarity.name;
+    rarityDiv.className = rarity.class;
 
-        resultDiv.innerText = name;
-        rarityDiv.innerText = rarity.name;
-        rarityDiv.className = rarity.class;
+    // Await the full animation — auto-roller cannot fire until this resolves
+    await triggerOverlay(rarity);
 
-        if(!inventory[rarity.name]) inventory[rarity.name] = 0;
-        inventory[rarity.name]++;
-        updateInventory();
+    if(!inventory[rarity.name]) inventory[rarity.name] = 0;
+    inventory[rarity.name]++;
+    updateInventory();
 
-        coins += rarity.value;
-        updateCoins();
-        isRolling = false;
-
-    }, 1500);
+    coins += rarity.value;
+    updateCoins();
+    isRolling = false;
 }
 
 function updateCoins(){
