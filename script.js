@@ -404,8 +404,8 @@ function forceRarity(rarityName){
         "Chrono":"chrono",
         "Voidborn":"voidborn",
         "Omniversal":"omniversal",
-        "TUFF GOD":"tuffgod"
-        "TUFF GOD":"tuffgod"
+        "TUFF GOD":"tuffgod",
+        "Limbo":"limbo"
     };
 
     // Value map so forced rolls actually give coins
@@ -413,7 +413,7 @@ function forceRarity(rarityName){
         "common":1,"uncommon":3,"rare":8,"epic":20,"legendary":50,
         "mythic":100,"divine":200,"celestial":400,"transcendent":800,
         "ethereal":1500,"abyssal":3000,"chrono":6000,"voidborn":12000,
-        "omniversal":25000,"tuffgod":100000
+        "omniversal":25000,"tuffgod":100000, "limbo":9999999999999999999
     };
 
     const resultDiv = document.getElementById("result");
