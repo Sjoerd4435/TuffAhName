@@ -6,7 +6,7 @@ const finn_list = ["Finn","Fynn","Fin","Finley","Finlay","Finbar","Finnick","Fin
 "Finwell","Finbell","Finzell","Finchell","Finrell","Finwell","Finhill","Finhold","Finford","Finwood",
 "Finstone","Finridge","Finlake","Finshore","Finport","Finbay","Finpark","Finzone","Finfield","Fincrest",
 "Finbrook","Finmount","Finval","Finridge","Finpath","Finroad","Finway","Finlink","Finweb","Fintech",
-"Finart","Finlux","Finmax","Finprime","Finstar","Finblue","Finred","Fingold","Finbright","Finlight","Finnshine","Why so feinius"
+"Finart","Finlux","Finmax","Finprime","Finstar","Finblue","Finred","Fingold","Finbright","Finlight"
 ];
 
 const henrico_list = ["Henrico","Henrigo","Henriko","Enrico","Henrique","Henriek","Henricano","Henricon","Henricus","Henrion",
@@ -37,7 +37,7 @@ const borsboom_list = [
 "Borsroute","Borspadje","Borswegje","Borsplein","Borshaven","Borsberg","Borsbergje","Borssteen","Borshout","Borsgroen",
 "Borsblauw","Borsrood","Borswit","Borsgoud","Borslicht","Borsnacht","Borsdag","Borsjaar","Borsstadje","Borshuis",
 "Borsvilla","Borscentrum","Borswereld","Borszonee","Borscore","Borsdata","Borstech","Borsai","Borsaii","Borsmax",
-"Borsneo","Borsnova","Borsprime","Borsbase","Borsweb","Borsnetto","Borslab","Borssys","Borslogic","Borscore", "Korstmos"
+"Borsneo","Borsnova","Borsprime","Borsbase","Borsweb","Borsnetto","Borslab","Borssys","Borslogic","Borscore"
 ];
 
 let isRolling = false;
@@ -59,48 +59,47 @@ function rand(arr){
 function getRarity(){
 
     const rarities = [
-        {name:"Common",        class:"common",        value:1,      weight:5000},
-        {name:"Uncommon",      class:"uncommon",      value:3,      weight:2500},
-        {name:"Rare",          class:"rare",           value:8,      weight:1200},
-        {name:"Epic",          class:"epic",           value:20,     weight:600},
-        {name:"Legendary",     class:"legendary",     value:50,     weight:250},
-        {name:"Mythic",        class:"mythic",        value:100,    weight:120},
-        {name:"Divine",        class:"divine",        value:200,    weight:50},
-        {name:"Celestial",     class:"celestial",     value:400,    weight:20},
-        {name:"Transcendent",  class:"transcendent",  value:800,    weight:8},
-        {name:"Ethereal",      class:"ethereal",      value:1500,   weight:3},
-        {name:"Abyssal",       class:"abyssal",       value:3000,   weight:1},
-        {name:"Chrono",        class:"chrono",        value:6000,   weight:0.5},
-        {name:"Voidborn",      class:"voidborn",      value:12000,  weight:0.2},
-        {name:"Omniversal",    class:"omniversal",    value:25000,  weight:0.05},
-        {name:"TUFF GOD",      class:"tuffgod",       value:100000, weight:0.01}
+        {name:"Common",        class:"common",        value:1,      weight:1000},
+        {name:"Uncommon",      class:"uncommon",      value:3,      weight:500},
+        {name:"Rare",          class:"rare",           value:8,      weight:250},
+        {name:"Epic",          class:"epic",           value:20,     weight:120},
+        {name:"Legendary",     class:"legendary",     value:50,     weight:55},
+        {name:"Mythic",        class:"mythic",        value:100,    weight:25},
+        {name:"Divine",        class:"divine",        value:200,    weight:11},
+        {name:"Celestial",     class:"celestial",     value:400,    weight:5},
+        {name:"Transcendent",  class:"transcendent",  value:800,    weight:2.2},
+        {name:"Ethereal",      class:"ethereal",      value:1500,   weight:1},
+        {name:"Abyssal",       class:"abyssal",       value:3000,   weight:0.45},
+        {name:"Chrono",        class:"chrono",        value:6000,   weight:0.2},
+        {name:"Voidborn",      class:"voidborn",      value:12000,  weight:0.09},
+        {name:"Omniversal",    class:"omniversal",    value:25000,  weight:0.04},
+        {name:"TUFF GOD",      class:"tuffgod",       value:100000, weight:0.015},
+        {name:"Limbo",         class:"limbo",         value:500000, weight:0.004}
     ];
 
-    // Sort rarest first so TUFF GOD sits at the lowest cumulative range
+    // Sort rarest first (index 0 = TUFF GOD, last index = Common)
     const sorted = [...rarities].sort((a, b) => a.weight - b.weight);
-    const totalWeight = sorted.reduce((sum, r) => sum + r.weight, 0);
+    const N = sorted.length;
 
-    // Build cumulative thresholds rarest → most common
-    let cum = 0;
-    const thresholds = sorted.map(r => {
-        cum += r.weight;
-        return { rarity: r, threshold: cum };
+    // Each tier gets a luck multiplier based on how rare it is.
+    // rareFactor=1 for TUFF GOD, rareFactor=0 for Common.
+    // At 0% luck all mults=1 so original weights are unchanged.
+    // At higher luck, rare tiers gain exponentially more weight vs common ones.
+    const boosted = sorted.map((r, i) => {
+        const rareFactor = (N - 1 - i) / (N - 1);
+        const mult = Math.pow(1 + luckBoost, rareFactor * 3);
+        return { rarity: r, w: r.weight * mult };
     });
 
-    // Math.pow(random, luckPower) skews the roll TOWARD 0
-    // Rare tiers live at the low end of cumulative range, so high luck = low roll = rare
-    // At 0% luck: luckPower=1, flat random, weights respected normally
-    // At 99000% luck: luckPower~100, roll almost always near 0 = TUFF GOD
-    const luckPower = 1 + Math.log1p(luckBoost * 3);
-    const roll = Math.pow(Math.random(), luckPower) * totalWeight;
-
-    for(const entry of thresholds){
-        if(roll < entry.threshold){
-            return entry.rarity;
-        }
+    const total = boosted.reduce((sum, r) => sum + r.w, 0);
+    const roll = Math.random() * total;
+    let cum = 0;
+    for(const entry of boosted){
+        cum += entry.w;
+        if(roll < cum) return entry.rarity;
     }
 
-    return sorted[sorted.length - 1];
+    return sorted[N - 1].rarity;
 }
 
 // Returns a Promise that resolves when the animation fully finishes
@@ -117,6 +116,24 @@ function triggerOverlay(rarity){
 
         if(rarity.class === "omniversal"){
             overlay.classList.add("overlay-active","omniversal-overlay");
+        }
+
+        if(rarity.class === "limbo"){
+            overlay.classList.add("overlay-active","limbo-overlay");
+            playLimboMinigame().then((won) => {
+                overlay.classList.remove("overlay-active","limbo-overlay");
+                body.style.animation = "";
+                if(won){
+                    // Grant the Limbo Aura — add to inventory as special item
+                    if(!inventory["Limbo Aura"]) inventory["Limbo Aura"] = 0;
+                    inventory["Limbo Aura"]++;
+                    updateInventory();
+                    coins += 500000;
+                    updateCoins();
+                }
+                resolve();
+            });
+            return;
         }
 
         if(rarity.class === "tuffgod"){
@@ -526,3 +543,335 @@ function redeemCode(){
 }
 
 window.triggerOverlay = triggerOverlay;
+
+/* -------- LIMBO MINIGAME -------- */
+
+function playLimboMinigame(){
+    return new Promise((resolve) => {
+
+        const overlay = document.getElementById('rarityOverlay');
+        overlay.innerHTML = '';
+
+        const W = window.innerWidth;
+        const H = window.innerHeight;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = W;
+        canvas.height = H;
+        canvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;';
+        overlay.appendChild(canvas);
+        const ctx = canvas.getContext('2d');
+
+        const uiDiv = document.createElement('div');
+        uiDiv.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
+        overlay.appendChild(uiDiv);
+
+        const NUM_KEYS = 5;
+        const DOOR_COUNT = 3;
+        let round = 0;
+        let phase = 'intro';
+        let introFrame = 0;
+        let bgOffset = 0;
+        let flashColor = null;
+        let flashTimer = 0;
+        let won = false;
+        let correctKeys = [];
+        for(let i = 0; i < DOOR_COUNT; i++) correctKeys.push(Math.floor(Math.random() * NUM_KEYS));
+
+        let buttons = [];
+        let animId = null;
+        let winTimer = 0;
+        let frameCount = 0;
+
+        let bgStars = [];
+        for(let i = 0; i < 80; i++) bgStars.push({
+            x: Math.random() * W, y: Math.random() * H,
+            s: Math.random() * 2 + 0.5, sp: Math.random() * 0.4 + 0.1
+        });
+
+        function makeButtons(){
+            uiDiv.innerHTML = '';
+            buttons = [];
+            if(phase !== 'picking') return;
+
+            const btnW = 70, btnH = 80;
+            const totalW = NUM_KEYS * (btnW + 14);
+            const startX = (W - totalW) / 2;
+            const y = H * 0.78;
+            const keyColors = ['#ff4444','#44aaff','#ffcc00','#44ff88','#cc44ff'];
+            const keySymbols = ['\u2666','\u2665','\u2663','\u2660','\u272A'];
+
+            for(let i = 0; i < NUM_KEYS; i++){
+                const btn = document.createElement('div');
+                const bx = startX + i * (btnW + 14);
+                btn.style.position = 'absolute';
+                btn.style.left = bx + 'px';
+                btn.style.top = y + 'px';
+                btn.style.width = btnW + 'px';
+                btn.style.height = btnH + 'px';
+                btn.style.background = keyColors[i];
+                btn.style.border = '3px solid #fff';
+                btn.style.borderRadius = '10px';
+                btn.style.display = 'flex';
+                btn.style.flexDirection = 'column';
+                btn.style.alignItems = 'center';
+                btn.style.justifyContent = 'center';
+                btn.style.cursor = 'pointer';
+                btn.style.pointerEvents = 'all';
+                btn.style.fontSize = '28px';
+                btn.style.color = '#fff';
+                btn.style.fontWeight = 'bold';
+                btn.style.userSelect = 'none';
+                btn.style.boxShadow = '0 0 18px ' + keyColors[i];
+                btn.innerHTML = '<span>' + keySymbols[i] + '</span><span style="font-size:11px;margin-top:4px">KEY ' + (i+1) + '</span>';
+                btn.addEventListener('mouseenter', function(){ this.style.transform = 'scale(1.13)'; });
+                btn.addEventListener('mouseleave', function(){ this.style.transform = 'scale(1)'; });
+                btn.addEventListener('click', function(){ handleKeyPick(i); });
+                uiDiv.appendChild(btn);
+                buttons.push(btn);
+            }
+        }
+
+        function handleKeyPick(index){
+            if(phase !== 'picking') return;
+            buttons.forEach(function(b){ b.style.pointerEvents = 'none'; });
+
+            if(index === correctKeys[round]){
+                flashColor = '#00ff88';
+                flashTimer = 40;
+                phase = 'result';
+                won = true;
+                setTimeout(function(){
+                    uiDiv.innerHTML = '';
+                    round++;
+                    if(round >= DOOR_COUNT){
+                        phase = 'win';
+                    } else {
+                        phase = 'nextround';
+                        setTimeout(function(){ phase = 'picking'; makeButtons(); }, 900);
+                    }
+                }, 900);
+            } else {
+                flashColor = '#ff2222';
+                flashTimer = 50;
+                phase = 'fail';
+                won = false;
+                setTimeout(function(){ phase = 'done'; }, 1800);
+            }
+        }
+
+        function drawBg(){
+            ctx.fillStyle = '#0a0014';
+            ctx.fillRect(0, 0, W, H);
+            for(let i = 0; i < bgStars.length; i++){
+                var s = bgStars[i];
+                s.x -= s.sp;
+                if(s.x < 0) s.x = W;
+                ctx.fillStyle = 'rgba(180,140,255,0.7)';
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.s, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.strokeStyle = '#6600cc';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, H * 0.72);
+            ctx.lineTo(W, H * 0.72);
+            ctx.stroke();
+            ctx.strokeStyle = 'rgba(100,0,200,0.15)';
+            ctx.lineWidth = 1;
+            var gridSpacing = 60;
+            var offset = (bgOffset * 2) % gridSpacing;
+            for(var x = -offset; x < W; x += gridSpacing){
+                ctx.beginPath(); ctx.moveTo(x, H * 0.72); ctx.lineTo(x - 80, H); ctx.stroke();
+            }
+            bgOffset += 1.5;
+        }
+
+        function drawPlayer(){
+            var px = W * 0.2;
+            var py = H * 0.62;
+            var size = 38;
+            ctx.save();
+            ctx.translate(px, py);
+            ctx.rotate(Math.sin(frameCount * 0.08) * 0.08);
+            ctx.fillStyle = '#aa44ff';
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            if(ctx.roundRect){
+                ctx.roundRect(-size/2, -size/2, size, size, 5);
+            } else {
+                ctx.rect(-size/2, -size/2, size, size);
+            }
+            ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#cc88ff';
+            ctx.beginPath();
+            ctx.rect(-size/4, -size/4, size/2, size/2);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function drawDoor(){
+            var dx = W * 0.72;
+            var dy = H * 0.38;
+            var dw = 70, dh = 120;
+            ctx.shadowColor = '#cc44ff';
+            ctx.shadowBlur = 12 + Math.sin(frameCount * 0.1) * 6;
+            ctx.fillStyle = '#1a0033';
+            ctx.strokeStyle = '#cc44ff';
+            ctx.lineWidth = 3;
+            ctx.fillRect(dx - dw/2, dy, dw, dh);
+            ctx.strokeRect(dx - dw/2, dy, dw, dh);
+            ctx.fillStyle = '#ffcc00';
+            ctx.beginPath();
+            ctx.arc(dx + dw/2 - 10, dy + dh * 0.55, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#cc44ff';
+            ctx.font = 'bold 32px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('?', dx, dy + dh * 0.5);
+        }
+
+        function drawHUD(){
+            ctx.textAlign = 'center';
+            ctx.globalAlpha = Math.min(1, introFrame / 30);
+            ctx.fillStyle = '#cc44ff';
+            ctx.font = 'bold ' + Math.floor(W * 0.075) + 'px Impact, Arial';
+            ctx.shadowColor = '#cc44ff';
+            ctx.shadowBlur = 25;
+            ctx.fillText('LIMBO', W / 2, H * 0.2);
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#ffcc00';
+            ctx.font = 'bold ' + Math.floor(W * 0.025) + 'px Arial';
+            ctx.fillText('Pick the correct key to claim the Limbo Aura', W / 2, H * 0.29);
+            ctx.fillStyle = '#aaaaff';
+            ctx.font = Math.floor(W * 0.02) + 'px Arial';
+            ctx.fillText('Round ' + (round + 1) + ' of ' + DOOR_COUNT, W / 2, H * 0.35);
+            ctx.globalAlpha = 1;
+        }
+
+        function drawFlash(){
+            if(flashTimer > 0){
+                var a = Math.floor((flashTimer / 50) * 200);
+                ctx.fillStyle = flashColor;
+                ctx.globalAlpha = a / 255;
+                ctx.fillRect(0, 0, W, H);
+                ctx.globalAlpha = 1;
+                flashTimer--;
+            }
+        }
+
+        function drawResultText(win){
+            ctx.textAlign = 'center';
+            if(win){
+                ctx.fillStyle = '#00ff88';
+                ctx.font = 'bold ' + Math.floor(W * 0.06) + 'px Impact, Arial';
+                ctx.shadowColor = '#00ff88';
+                ctx.shadowBlur = 20;
+                ctx.fillText(round >= DOOR_COUNT ? 'AURA OBTAINED!' : 'CORRECT! NEXT ROUND...', W/2, H * 0.5);
+            } else {
+                ctx.fillStyle = '#ff2222';
+                ctx.font = 'bold ' + Math.floor(W * 0.055) + 'px Impact, Arial';
+                ctx.shadowColor = '#ff2222';
+                ctx.shadowBlur = 20;
+                ctx.fillText('WRONG KEY...', W / 2, H * 0.46);
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#ffaaaa';
+                ctx.font = Math.floor(W * 0.022) + 'px Arial';
+                ctx.fillText('Limbo Aura lost. You will try again.', W / 2, H * 0.57);
+            }
+            ctx.shadowBlur = 0;
+        }
+
+        function drawWin(){
+            var cx = W / 2, cy = H * 0.44;
+            for(var r = 0; r < 4; r++){
+                var radius = 60 + r * 35 + Math.sin(frameCount * 0.08 + r) * 10;
+                var hue = (frameCount * 3 + r * 60) % 360;
+                ctx.strokeStyle = 'hsl(' + hue + ',100%,65%)';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            ctx.fillStyle = '#ffcc00';
+            ctx.font = 'bold ' + Math.floor(W * 0.065) + 'px Impact, Arial';
+            ctx.textAlign = 'center';
+            ctx.shadowColor = '#ffcc00';
+            ctx.shadowBlur = 30;
+            ctx.fillText('LIMBO AURA', cx, H * 0.23);
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#ffffff';
+            ctx.font = Math.floor(W * 0.025) + 'px Arial';
+            ctx.fillText('Added to your inventory!', cx, H * 0.31);
+            var g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 55);
+            g.addColorStop(0, '#ffffff');
+            g.addColorStop(0.4, '#cc44ff');
+            g.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.shadowColor = '#cc44ff';
+            ctx.shadowBlur = 20 + Math.sin(frameCount * 0.1) * 10;
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 55, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+
+        function tick(){
+            ctx.clearRect(0, 0, W, H);
+            drawBg();
+
+            if(phase === 'intro'){
+                introFrame++;
+                drawPlayer();
+                drawDoor();
+                drawHUD();
+                if(introFrame > 80){
+                    phase = 'picking';
+                    makeButtons();
+                }
+            } else if(phase === 'picking'){
+                drawPlayer();
+                drawDoor();
+                drawHUD();
+            } else if(phase === 'result' || phase === 'nextround'){
+                drawPlayer();
+                drawDoor();
+                drawHUD();
+                drawFlash();
+                drawResultText(true);
+            } else if(phase === 'fail'){
+                drawPlayer();
+                drawFlash();
+                drawResultText(false);
+            } else if(phase === 'win'){
+                winTimer++;
+                drawWin();
+                if(winTimer > 160){ phase = 'done'; }
+            } else if(phase === 'done'){
+                cancelAnimationFrame(animId);
+                var alpha = 1;
+                var fade = setInterval(function(){
+                    alpha -= 0.07;
+                    ctx.clearRect(0, 0, W, H);
+                    ctx.globalAlpha = Math.max(0, alpha);
+                    drawBg();
+                    ctx.globalAlpha = 1;
+                    if(alpha <= 0){
+                        clearInterval(fade);
+                        overlay.innerHTML = '';
+                        resolve(won && round >= DOOR_COUNT);
+                    }
+                }, 16);
+                return;
+            }
+
+            frameCount++;
+            animId = requestAnimationFrame(tick);
+        }
+
+        requestAnimationFrame(tick);
+    });
+}
