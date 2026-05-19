@@ -405,6 +405,7 @@ function forceRarity(rarityName){
         "Voidborn":"voidborn",
         "Omniversal":"omniversal",
         "TUFF GOD":"tuffgod"
+        "TUFF GOD":"tuffgod"
     };
 
     // Value map so forced rolls actually give coins
