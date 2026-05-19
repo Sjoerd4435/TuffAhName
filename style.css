@@ -217,3 +217,27 @@ button{
     from { opacity: 0.5; }
     to   { opacity: 1; }
 }
+
+/* ---- LIMBO RARITY ---- */
+.limbo {
+    color: #cc44ff;
+    text-shadow:
+        0 0 10px #cc44ff,
+        0 0 25px #cc44ff,
+        0 0 50px #aa00ff,
+        0 0 80px #6600cc;
+    animation: limboShift 1.5s infinite alternate;
+}
+
+@keyframes limboShift {
+    0%   { color: #cc44ff; text-shadow: 0 0 20px #cc44ff, 0 0 50px #aa00ff; letter-spacing: 0px; }
+    50%  { color: #ff44cc; text-shadow: 0 0 30px #ff44cc, 0 0 70px #cc0088; letter-spacing: 2px; }
+    100% { color: #44ccff; text-shadow: 0 0 25px #44ccff, 0 0 60px #0088cc; letter-spacing: 0px; }
+}
+
+/* overlay stays visible, canvas handles everything */
+.limbo-overlay {
+    opacity: 1 !important;
+    animation: none !important;
+    background: #0a0014;
+}
