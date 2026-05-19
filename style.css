@@ -90,6 +90,7 @@ button{
     animation: pulse 0.5s infinite alternate;
 }
 
+/* ---- OVERLAY BASE ---- */
 #rarityOverlay {
     position: fixed;
     top: 0;
@@ -116,9 +117,11 @@ button{
     background: radial-gradient(circle, white, purple, black);
 }
 
+/* tuffgod-overlay: NO fade animation, stays fully visible so the canvas inside shows */
 .tuffgod-overlay {
-    background: linear-gradient(45deg, red, orange, yellow, purple);
-    animation: godPulse 0.6s infinite alternate;
+    opacity: 1 !important;
+    animation: none !important;
+    background: #000;
 }
 
 @keyframes godPulse {
@@ -136,12 +139,6 @@ button{
     0% { filter: hue-rotate(0deg) blur(0px); transform: scale(1); }
     50% { filter: hue-rotate(180deg) blur(2px); transform: scale(1.05); }
     100% { filter: hue-rotate(360deg) blur(0px); transform: scale(1); }
-}
-
-/* Lightning flash */
-@keyframes lightningFlash {
-    0% { background: white; opacity: 1; }
-    100% { background: black; opacity: 0; }
 }
 
 /* Void collapse */
